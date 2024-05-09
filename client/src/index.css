@@ -82,6 +82,45 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.sidebar-container {
+  display: flex; /* Allow stacking icons vertically */
+  flex-direction: column; /* Stack icons vertically */
+  justify-content: space-between; /*Distribute icons evenly*/
+  padding: 1rem; /*Optional: Add padding*/
+  height: 100%; /* Set icons container height to full sidebar */
+  background-color: #d32f2f;
+  color: #fff;
+}
+
+.sidebar-icons {
+  display: flex; /* Allow stacking icons vertically */
+  flex-direction: column; /* Stack icons vertically */
+  justify-content: space-between; /*Distribute icons evenly*/
+  /* padding: 1rem; Optional: Add padding */
+  height: 60%; /* Set icons container height to full sidebar */
+  background-color: #d32f2f;
+  color: #fff;
+}
+
+.sidebar-bottom-icons {
+  display: flex; /* Allow stacking icons vertically */
+  flex-direction: column; /* Stack icons vertically */
+  justify-content: space-between; /*Distribute icons evenly*/
+  padding-bottom: 2rem; /*Optional: Add padding*/
+  height: 25%; /* Set icons container height to full sidebar */
+  background-color: #d32f2f;
+  color: #fff;
+}
+
+.sidebar-logo {
+  display: flex; /* Allow stacking icons vertically */
+  flex-direction: column; /* Stack icons vertically */
+  justify-content: space-between; /*Distribute icons evenly*/
+  height: 5%; /*Set icons container height to full sidebar */
+  background-color: #d32f2f;
+  color: #fff;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
