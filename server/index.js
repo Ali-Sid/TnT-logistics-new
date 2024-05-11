@@ -47,7 +47,27 @@ app.get('/getItems', async (req, res) => {
     console.log('Connected to the database.');
 
     // Query to fetch ItemID, Name, and SKUNumber from dbo.Items
-    const result = await sql.query`SELECT ItemID, Name, SKUNumber, ItemNumber, TagID FROM dbo.Items`;
+    const result = await sql.query`SELECT * FROM dbo.Items`;
+
+    // Send the result back to the client
+    // res.send(result.recordset);
+    // Ensure a response is sent
+    res.status(200).json(result.recordset);
+  } catch (err) {
+    console.log('Error fetching data:', err);
+    res.status(500).send('Error fetching data');
+  }
+});
+
+// Endpoint to fetch item master
+app.get('/getItemMaster', async (req, res) => {
+  try {
+    // Connect to the database
+    await sql.connect(config);
+    console.log('Connected to the database.');
+
+    // Query to fetch ItemID, Name, and SKUNumber from dbo.Items
+    const result = await sql.query`SELECT * FROM dbo.ItemMaster`;
 
     // Send the result back to the client
     // res.send(result.recordset);
@@ -108,10 +128,6 @@ app.get('/getItemCount/:itemCode', async (req, res) => {
   }
 });
 
-
-
-
-
 // Route to insert data into dbo.Items
 
 app.post('/addItem', async (req, res) => {
@@ -145,6 +161,53 @@ app.post('/addItem', async (req, res) => {
 });
 
 
+
+
+
+// Route to insert data into dbo.Items
+
+app.post('/addItembyMachines', async (req, res) => {
+  const { machineName, machineLocation, selectedItemName, sku, currentDate, itemNumber, itemSelectedID, shift, batchCode, prodDetails } = req.body;
+
+  try {
+    // Get the name of the location with ID 1
+    const locationNameResult = await pool.request()
+      .input('locationID', sql.Int, 1) // Assuming location with ID 1
+      .query(`SELECT Name FROM dbo.locations WHERE LocationID = @locationID`);
+
+    // Check if location name was found
+    if (!locationNameResult.recordset.length) {
+      return res.status(400).send('Location with ID 1 not found');
+    }
+
+    const locationName = locationNameResult.recordset[0].Name;
+
+    // Insert data into the Items table
+    await pool.request()
+      .input('machineName', sql.NVarChar(255), machineName)
+      .input('machineLocation', sql.NVarChar(100), machineLocation)
+      .input('sku', sql.NVarChar(100), sku)
+      .input('selectedItemName', sql.NVarChar(255), selectedItemName)
+      .input('itemNumber', sql.NVarChar(255), itemNumber)
+      .input('itemMasterID', sql.Int, itemSelectedID) // Using itemSelectedID directly
+      .input('currentDate', sql.Date, currentDate)
+      .input('shift', sql.NVarChar(255), shift)
+      // .input('location', sql.NVarChar(255), locationName)
+      .input('batchcode', sql.NVarChar(255), batchCode)
+      .input('prodDetails', sql.NVarChar(255), prodDetails)
+      .query(`
+         INSERT INTO dbo.Items (MachineName, Location, SKUNumber, ItemNumber, ItemCode, ItemMasterID, date_created, Shift, BatchCode, ProductionDetails)
+         VALUES (@machineName, @machineLocation, @sku, @itemNumber, @itemNumber, @itemMasterID, CONVERT(DATE, @currentDate), @shift, @batchCode, @prodDetails)
+       `);
+
+    res.status(201).json({ message: 'Item added successfully' });
+  } catch (error) {
+    console.error('Error adding item to the database:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 // Insert Data into Item Master Table
 app.post('/addItemMaster', async (req, res) => {
   const { itemName, skuNumber, itemCode } = req.body;
@@ -155,6 +218,7 @@ app.post('/addItemMaster', async (req, res) => {
   }
 
   try {
+
     // Insert data into the Items Master table
     await pool.request()
       .input('itemName', sql.NVarChar(255), itemName)
@@ -387,6 +451,21 @@ app.post('/savePackTag', async (req, res) => {
   }
 });
 
+// Endpoint to fetch machines table
+// Endpoint for fetching the Packing Master table
+app.get('/machines', async (req, res) => {
+  try {
+    // Query to fetch all rows from the tags table
+    const result = await pool.query('SELECT * FROM Machines');
+    // Send the fetched data as a JSON response
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Error fetching machines:', error);
+    // If there's an error, send a 500 Internal Server Error response
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 
 
@@ -574,11 +653,14 @@ app.post('/search', async (req, res) => {
     const searchTerm = req.body.searchTerm;
 
     // Query to search in both items and packItems tables
+    // const query = `
+    //  SELECT ItemID AS ID, Name, ItemCode, SKUNumber, TagID, 'Item' AS Source FROM items WHERE TagID = ${searchTerm}
+    //  UNION ALL
+    //  SELECT PItemID AS ID, PItemName, NULL AS SKUNumber, PItemTagID, 'PackItem' AS Source FROM packItems WHERE PItemTagID = ${searchTerm}
+
+    //  `;
     const query = `
-     SELECT ItemID AS ID, Name, SKUNumber, TagID, 'Item' AS Source FROM items WHERE TagID = ${searchTerm}
-     UNION ALL
-     SELECT PItemID AS ID, PItemName, NULL AS SKUNumber, PItemTagID, 'PackItem' AS Source FROM packItems WHERE PItemTagID = ${searchTerm}
-     
+     SELECT PItemID, PItemName, PItemTagID, PItemNumber, ResType FROM packItems WHERE PItemTagID = ${searchTerm}
      `;
 
     const result = await pool.request().query(query);
@@ -588,6 +670,83 @@ app.post('/search', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+
+// // endpoint for child search input
+// app.post('/search2', async (req, res) => {
+//   try {
+//     const pool = await sql.connect(config);
+//     const searchTerm = req.body.searchTerm;
+
+//     // Query to search in both items and packItems tables
+//     const query = `
+//      SELECT * FROM items WHERE ItemCode = @searchTerm
+//      `;
+
+//     const result = await pool.request()
+//     .input('searchTerm', sql.VarChar, searchTerm)
+//     .query(query);
+//     res.json(result.recordset);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).send('Server error');
+//   }
+// });
+
+// Endpoint for child search input
+app.post('/search2', async (req, res) => {
+  try {
+    const pool = await sql.connect(config);
+    const searchTerm = req.body.searchTerm; // Assuming itemCode is sent here
+
+    // Fetch data from items table
+    const query1 = `
+      SELECT *
+      FROM items
+      WHERE itemCode = @searchTerm
+    `;
+
+    const itemResults = await pool.request()
+      .input('searchTerm', sql.VarChar, searchTerm)
+      .query(query1);
+
+    if (itemResults.recordset.length === 0) {
+      return res.status(404).send('Item not found'); // Handle item not found
+    }
+
+    // Array to store combined data
+    const combinedData = [];
+
+    // Loop through each item and fetch details from ItemsMaster
+    for (const item of itemResults.recordset) {
+      const sku = item.SKUNumber; // Assuming SKU is the matching field
+
+      const query2 = `
+        SELECT *
+        FROM ItemMaster
+        WHERE SKU = @sku
+      `;
+
+      const itemMasterResult = await pool.request()
+        .input('sku', sql.VarChar, sku)
+        .query(query2);
+
+      if (itemMasterResult.recordset.length === 0) {
+        // Handle missing item in ItemsMaster (optional)
+        console.warn(`Item with SKU ${sku} not found in ItemsMaster`);
+      } else {
+        const itemDetails = itemMasterResult.recordset[0];
+        combinedData.push({ ...item, ...itemDetails }); // Combine data
+      }
+    }
+
+    res.json(combinedData);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 
 
 
@@ -676,7 +835,7 @@ app.post('/saveTag', async (req, res) => {
       .input('RFID', sql.NVarChar(255), RFID)
       .input('TagStatus', sql.NVarChar(255), TagStatus)
       .input('ResType', sql.NVarChar(50), ResType)
-      .input('ItemNumber', sql.NVarChar(50), ItemNumber)
+      .input('ItemNumber', sql.Int(50), ItemNumber)
       .query(`
          INSERT INTO dbo.Tags (BarCode, QRCode, NFC, RFID, TagStatus, ResType, ResNumber)
          OUTPUT INSERTED.TagID
@@ -716,7 +875,7 @@ app.post('/saveTag', async (req, res) => {
 
     await pool.request()
       .input('TagID', sql.Int, tagId)
-      .input('ItemNumber', sql.NVarChar(255), ItemNumber)
+      .input('ItemNumber', sql.Int, ItemNumber)
       .query(insertItemQuery)
 
     res.status(201).json({ message: 'Tag and item added successfully' });
@@ -751,9 +910,14 @@ app.post('/associate', async (req, res) => {
         .input('mainResName', sql.NVarChar(255), mainResName)
         .input('associateResID', sql.Int, associate.associateResID)
         .input('associateResName', sql.NVarChar(255), associate.associateResName)
+        .input('associateResLocation', sql.NVarChar(255), associate.associateResLocation)
+        .input('associateResMachineName', sql.NVarChar(255), associate.associateResMachineName)
+        .input('associateResItemCode', sql.NVarChar(255), associate.associateResItemCode)
+        .input('associateResBatchCode', sql.NVarChar(255), associate.associateResBatchCode)
+        .input('associateResProductionDetails', sql.NVarChar(255), associate.associateResProductionDetails)
         .query(`
-           INSERT INTO dbo.AssociateResources (MainResID, MainResName, AssociateResID, AssociateResName, UpdateDt, Status)
-           VALUES (@mainResID, @mainResName, @associateResID, @associateResName, GETDATE(), 1)
+           INSERT INTO dbo.AssociateResources (MainResID, MainResName, AssociateResID, AssociateResName, LocationName, MachineName, ItemCode, BatchCode, ProductionDetails, UpdateDt, Status)
+           VALUES (@mainResID, @mainResName, @associateResID, @associateResName, @associateResLocation, @associateResMachineName, @associateResItemCode, @associateResBatchCode, @associateResProductionDetails, GETDATE(), 1)
          `);
 
       // Then, move the item from "items" table to "itemsAttached" table
@@ -767,22 +931,40 @@ app.post('/associate', async (req, res) => {
         DELETE FROM dbo.items
         WHERE ItemId = @associateResID;
       `);
+
+      // Insert into packItemsAttached table
+      await pool.request()
+        .input('mainResID', sql.Int, mainResID)
+        .input('mainResName', sql.NVarChar(255), mainResName)
+        .query(`
+        INSERT INTO dbo.packItemsAttached (PItemID, PItemName, UpdateDt, Status)
+        VALUES (@mainResID, @mainResName, GETDATE(), 1);
+      `);
+
+      // Delete from the original table if needed
+      await pool.request()
+        .input('mainResID', sql.Int, mainResID)
+        .query(`
+        DELETE FROM dbo.packItemsAttached
+        WHERE PItemID = @mainResID;
+      `);
     }
+  }
 
 
      // Commit the transaction
      await transaction.commit();
-     console.log('Transaction committed successfully.');
+  console.log('Transaction committed successfully.');
 
-    console.log('Received data:', req.body);
-    res.status(201).json({ message: 'Associations added successfully' });
-  } catch (error) {
-    // Rollback the transaction in case of an error
-    await transaction.rollback();
-    console.error('Error in transaction, rolling back.', error);
-    console.error('Error adding associations to the database:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  console.log('Received data:', req.body);
+  res.status(201).json({ message: 'Associations added successfully' });
+} catch (error) {
+  // Rollback the transaction in case of an error
+  await transaction.rollback();
+  console.error('Error in transaction, rolling back.', error);
+  console.error('Error adding associations to the database:', error);
+  res.status(500).json({ error: 'Internal server error' });
+}
 });
 
 //---------------------------end of scanning panel endpoint-------------------------- 
