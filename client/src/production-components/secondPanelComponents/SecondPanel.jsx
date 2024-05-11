@@ -12,6 +12,8 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
   const [getItems, setGetItems] = useState([]);
   const [itemMaster, setItemMaster] = useState([]);
   const [tags, setTags] = useState('');
+  const [newFilteredItems, setNewFilteredItems] = useState([]);
+  const [displayTotalCount, setDisplayTotalCount] = useState(0);
 
   useEffect(() => {
     // Fetch items when the component mounts or when the selected item changes
@@ -27,9 +29,6 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
     }
   };
 
-  // Filter items based on selected item
-  const filteredItems = selectedItem ? getItems.filter((item) => item.Name === selectedItem.ItemDesc) : [];
-  const totalCount = filteredItems.length;
 
   // const filteredItems = selectedItem ? packingItems.filter(item => item.PItemMasterID === selectedItem.PItemMasterID) : [];
   // const totalCount = filteredItems.length;
@@ -47,6 +46,13 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
         setGetItems(itemResponse.data);
         setItemMaster(itemMasterResponse.data);
         setTags(tagsResponse.data);
+
+        // Filter items based on selected item
+        const filteredItems = selectedItem ? getItems.filter((item) => item.MachineName === selectedItem.Name) : [];
+        const totalCount = filteredItems.length;
+        setNewFilteredItems(filteredItems);
+        setDisplayTotalCount(totalCount);
+
       } catch (error) {
         console.error('Error fetching items:', error);
       }
@@ -55,10 +61,10 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
     fetchData();
   }, [selectedItem]);
 
-  
 
 
-  
+
+
   const handleOpen = () => {
     setOpen(true);
   };
@@ -80,32 +86,32 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
 
   return (
     <div>
-      <div style={{overflow: "hidden"}}>
-        {selectedItem && <TopSecondPanel selectedItem={selectedItem} handleOpen={handleOpen} handleClose={handleClose} totalCount={totalCount} />}
-        <BottomSecondPanel items={filteredItems} tags={tags} onItemClick={onItemClick} />
+      <div style={{ overflow: "hidden" }}>
+        {selectedItem && <TopSecondPanel selectedItem={selectedItem} handleOpen={handleOpen} handleClose={handleClose} totalCount={displayTotalCount} />}
+        <BottomSecondPanel items={newFilteredItems} tags={tags} onItemClick={onItemClick} />
         <Dialog
-        fullWidth
-        fullScreen
-        maxWidth="sm"
-        open={open} // Use the open state here
-        onClose={handleClose} // Use the handleClose function here
-      >
-        <DialogTitle>
-          <Grid container alignItems="center" justifyContent="space-between">
-            <Grid item>
-              Add New Catalogue
+          fullWidth
+          fullScreen
+          maxWidth="sm"
+          open={open} // Use the open state here
+          onClose={handleClose} // Use the handleClose function here
+        >
+          <DialogTitle>
+            <Grid container alignItems="center" justifyContent="space-between">
+              <Grid item>
+                Add New Catalogue
+              </Grid>
+              <Grid item>
+                <IconButton aria-label="close" onClick={handleClose}>
+                  <CloseIcon />
+                </IconButton>
+              </Grid>
             </Grid>
-            <Grid item>
-              <IconButton aria-label="close" onClick={handleClose}>
-                <CloseIcon />
-              </IconButton>
-            </Grid>
-          </Grid>
-        </DialogTitle>
-        <DialogContent>
-          <NewItemCatalog selectedItem={selectedItem} itemMaster={itemMaster} onItemAdded={handleItemAdded} onCloseDialog={handleClose} />
-        </DialogContent>
-      </Dialog>
+          </DialogTitle>
+          <DialogContent>
+            <NewItemCatalog selectedItem={selectedItem} itemMaster={itemMaster} onItemAdded={handleItemAdded} onCloseDialog={handleClose} />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
 

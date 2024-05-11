@@ -73,7 +73,7 @@ function NewItemCatalog({ itemMaster, selectedItem, onItemAdded, onCloseDialog }
 
 
 
-                const response = await axios.post('http://localhost:3000/addItem', { machineName, machineLocation, currentDate: selectedDate, shift, sku, selectedItemName, batchCode, prodDetails, itemNumber: uniqueNumber, itemSelectedID }, {
+                const response = await axios.post('http://localhost:3000/addItemByMachines', { machineName, machineLocation, currentDate: selectedDate, shift, sku, selectedItemName, batchCode, prodDetails, itemNumber: uniqueNumber, itemSelectedID }, {
                     headers: {
                         'Content-Type': 'application/json'
                     }

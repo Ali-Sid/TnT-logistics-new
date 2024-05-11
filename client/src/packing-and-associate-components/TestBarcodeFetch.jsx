@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useMediaQuery } from '@mui/material';
+import { Box, Button, MenuItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useMediaQuery } from '@mui/material';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 
 function TestBarcodeFetch() {
@@ -36,7 +36,7 @@ function TestBarcodeFetch() {
         setAssociateResName(item.Name || item.PItemName);
     };
 
-    
+
     // Function to save the selected resources
     const saveResources = async (searchResults, searchResults2) => {
 
@@ -50,11 +50,17 @@ function TestBarcodeFetch() {
         }
 
         const dataToSend = {
-            mainResID: selectedParent.ID,
+            mainResID: selectedParent.PItemID,
             mainResName: selectedParent.Name || selectedParent.PItemName,
             associateRes: searchResults2.map(item => ({
                 associateResID: item.ItemID || item.ID,
-                associateResName: item.Name || item.PItemName
+                associateResName: item.ItemDesc || item.PItemName,
+                associateResLocation: item.Location,
+                associateResMachineName: item.MachineName,
+                associateResItemCode: item.ItemCode,
+                associateResBatchCode: item.BatchCode,
+                associateResProductionDetails: item.ProductionDetails,
+                associateResDate: new Date().toISOString()
             }))
         };
 
@@ -66,9 +72,9 @@ function TestBarcodeFetch() {
         //     dataToSend.associateResID = selectedChild.ID;
         //     dataToSend.associateResName = selectedChild.Name || selectedChild.PItemName;
         //   }
-          console.log('Data to Send:', dataToSend)
+        console.log('Data to Send:', dataToSend)
 
-        
+
 
         try {
             const response = await axios.post('http://localhost:3000/associate', dataToSend, {
@@ -83,24 +89,25 @@ function TestBarcodeFetch() {
 
             if (response.status === 200) {
                 alert('Resources saved successfully.');
-                // Optionally, clear selections and search results here
-                setMainResID(null);
-                setMainResName(null);
-                setAssociateResID(null);
-                setAssociateResName(null);
-                setSearchTerm('');
-                setInputValue('');
-                setSearchResults([]);
-                setSearchResults2([]);
-                setSelectedParent(null);
-                setSelectedChild(null);
-            } 
+            }
             // else {
             //     alert('Failed to save resources.');
             // }
         } catch (error) {
             console.log('Error sending data', error)
             alert('Failed to save resources.');
+        } finally {
+            // Clear state in the finally block to ensure it runs regardless of success or failure
+            setMainResID(null);
+            setMainResName(null);
+            setAssociateResID(null);
+            setAssociateResName(null);
+            setSearchTerm('');
+            setInputValue('');
+            setSearchResults([]);
+            setSearchResults2([]);
+            setSelectedParent(null);
+            setSelectedChild(null);
         }
     };
 
@@ -121,9 +128,9 @@ function TestBarcodeFetch() {
     const fetchData2 = async (inputValue) => {
         setIsLoading(true);
         try {
-            const response = await axios.post('http://localhost:3000/search', { searchTerm: inputValue });
-            const newItems = response.data.filter(item => !searchResults2.some(existingItem => existingItem.TagID === item.TagID));
-            setSearchResults2(prevResults => [...prevResults, ...newItems]);
+            const response = await axios.post('http://localhost:3000/search2', { searchTerm: inputValue });
+            const newItems = response.data.filter(item => !searchResults2.some(existingItem => existingItem.ItemID === item.ItemID));
+            setSearchResults2((prevResults) => [...prevResults, ...newItems]);
             setError(null);
         } catch (error) {
             console.error('Error fetching data: ', error);
@@ -150,9 +157,19 @@ function TestBarcodeFetch() {
         setShowSecondDiv(!showSecondDiv);
     };
 
+    const units = {
+        name: "Kilograms", value: "Kilograms",
+        name: "Litres", value: "Litres"
+    }
+
+
+
     return (
         <div style={{ display: "flex", flexDirection: "row", width: "100%" }}>
-            <div style={{ width: isMobile ? "100%" : "30%" }}>
+            <div style={{
+                width: isMobile ? "100%" : "30%", height: "100vh", boxShadow: "0px 3px 5px rgba(0, 0, 0, 0.5), 0px 0px 5px rgba(0, 0, 0, 0.5)", // Shadow properties
+                borderRadius: "5px"
+            }}>
                 <Box sx={{ display: "flex", flexDirection: "row" }}>
                     <Box sx={{ marginLeft: "10px", padding: "5px 3px 5px 3px", border: "1px solid #d32f2f", backgroundColor: "#d32f2f", color: "#fff", borderRadius: "5px", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "auto", height: "16px" }}>
                         <BookmarksIcon />
@@ -177,12 +194,21 @@ function TestBarcodeFetch() {
                         <div>
                             {/* <Typography variant="h6">Filtered Items:</Typography> */}
                             {searchResults && searchResults.map((item, index) => (
-                                <div key={index}>
+                                <div key={index} style={{ display: "flex", flexDirection: "column" }}>
                                     <h2>{item.PItemTagID || item.TagID}</h2>
                                     <p>{item.Name || item.PItemName}</p>
-                                    <p>{item.Source}</p>
-                                    <p>{item.ID}</p>
-                                    <Button color='error' variant='contained' onClick={toggleSecondDiv}>Add Boxes</Button>
+                                    <p>{item.PItemNumber}</p>
+                                    {/* <p>{item.PItemID}</p> */}
+                                    <div style={{ width: "100%", display: "flex", flexDirection: "row", gap: "10px" }}>
+                                        <TextField type='number' sx={{ width: "50%", mb: "20px" }} label="Packing Capacity" />
+                                        <TextField sx={{ width: "50%" }} select label="Select Unit">
+                                            <MenuItem name="Boxes" value="Boxes">Boxes</MenuItem>
+                                            <MenuItem name="Cases" value="Cases">Cases</MenuItem>
+                                            <MenuItem name="Kilograms" value="Kilograms">Kilograms</MenuItem>
+                                            <MenuItem name="Litres" value="Litres">Litres</MenuItem>
+                                        </TextField>
+                                    </div>
+                                    <Button color='error' variant='contained' onClick={toggleSecondDiv}>Add consignment</Button>
                                     {/* <form>
                                         <input type="text" value={item.PItemID || item.TagID} />
                                     </form> */}
@@ -204,17 +230,24 @@ function TestBarcodeFetch() {
                         </Typography>
                     </Box>
                     <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between", mt: 0, ml: 2, mr: 2 }}>
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            id="name"
-                            label="Scan Barcode"
-                            type="text"
-                            fullWidth
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                        />
-                        <Box sx={{overflow: "auto", maxHeight: "450px"}}>
+                        <Box sx={{ display: "flex", flexDirection: "row", gap: "10px", width: "100%" }}>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                id="name"
+                                label="Scan Barcode"
+                                type="text"
+                                fullWidth
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                width="50%"
+                            />
+                            <Box sx={{ width: "50%", display: "flex", flexDirection: "column" }}>
+                                <Typography variant='h5'>0</Typography>
+                                <Typography variant='h5'>Added</Typography>
+                            </Box>
+                        </Box>
+                        <Box sx={{ overflow: "auto", maxHeight: "450px" }}>
                             {isLoading && <p>Loading details...</p>}
                             {error && <p style={{ color: 'red' }}>{error}</p>}
                             <div>
@@ -222,19 +255,21 @@ function TestBarcodeFetch() {
                                     <Table aria-label="simple table">
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell>Tag ID</TableCell>
+                                                <TableCell>SKU No.</TableCell>
                                                 <TableCell>Name</TableCell>
-                                                <TableCell>ID</TableCell>
+                                                <TableCell>TagID</TableCell>
+                                                <TableCell>Date and Time Stamp</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
                                             {searchResults2.map((item, index) => (
                                                 <TableRow key={index}>
                                                     <TableCell component="th" scope="row">
-                                                        {item.PItemTagID || item.TagID}
+                                                        {item.SKUNumber}
                                                     </TableCell>
-                                                    <TableCell>{item.Name || item.PItemName}</TableCell>
-                                                    <TableCell>{item.ID}</TableCell>
+                                                    <TableCell>{item.ItemDesc}</TableCell>
+                                                    <TableCell>{item.ItemCode}</TableCell>
+                                                    <TableCell>{new Date().toLocaleString()}</TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -244,7 +279,7 @@ function TestBarcodeFetch() {
                         </Box>
                     </Box>
                     <Box sx={{ marginTop: "10px" }}>
-                        <Button variant='contained' color='error' onClick={() => saveResources(searchResults, searchResults2)}>Save</Button>
+                        <Button variant='contained' color='error' onClick={() => saveResources(searchResults, searchResults2)}>Save Packing Details</Button>
                     </Box>
                 </div>
             )}

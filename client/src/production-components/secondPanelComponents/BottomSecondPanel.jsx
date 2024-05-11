@@ -32,11 +32,11 @@ const BottomSecondPanel = ({ items, onItemClick, tags }) => {
                 }}
               >
                 <ListItemText
-                  primary={item.Name}
+                  primary={item.SKUNumber}
                   secondary={
                     <>
                       {/* No need for commented-out Typography component */}
-                      {barcode}
+                      {item.ItemCode}
                       {/* Display item.ItemNumber directly */}
                     </>
                   }
