@@ -1,0 +1,136 @@
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+:root {
+  /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
+  font-family: 'Open Sans', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  height: auto;
+  overflow: hidden;
+
+  color-scheme: light dark;
+  /* color: rgba(255, 255, 255, 0.87); */
+  color: #000;
+  /* background-color: #242424; */
+  background-color: #fff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+/* CSS */
+::-webkit-scrollbar {
+  background-color: transparent; /* Set scrollbar background color to transparent */
+  width: 8px; /* Width of the scrollbar */
+}
+
+/* Optionally, you can style other aspects of the scrollbar, such as its track and thumb */
+::-webkit-scrollbar-track {
+  background-color: transparent; /* Set track color to transparent */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #ccc; /* Set thumb color */
+  border-radius: 4px; /* Round the corners of the thumb */
+}
+
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  /* display: flex; */
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  /* overflow: hidden; */
+}
+
+h1 {
+  font-size: 28px;
+  line-height: 1.1;
+  font-family: "Raleway", sans-serif;
+}
+
+button {
+  border-radius: 5px;
+  border: 1px solid transparent;
+  padding: 6px;
+  margin: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #d32f2f;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.sidebar-container {
+  display: flex; /* Allow stacking icons vertically */
+  flex-direction: column; /* Stack icons vertically */
+  justify-content: space-between; /*Distribute icons evenly*/
+  padding: 1rem; /*Optional: Add padding*/
+  height: 100%; /* Set icons container height to full sidebar */
+  background-color: #d32f2f;
+  color: #fff;
+}
+
+.sidebar-icons {
+  display: flex; /* Allow stacking icons vertically */
+  flex-direction: column; /* Stack icons vertically */
+  justify-content: space-between; /*Distribute icons evenly*/
+  /* padding: 1rem; Optional: Add padding */
+  height: 60%; /* Set icons container height to full sidebar */
+  background-color: #d32f2f;
+  color: #fff;
+}
+
+.sidebar-bottom-icons {
+  display: flex; /* Allow stacking icons vertically */
+  flex-direction: column; /* Stack icons vertically */
+  justify-content: space-between; /*Distribute icons evenly*/
+  padding-bottom: 2rem; /*Optional: Add padding*/
+  height: 25%; /* Set icons container height to full sidebar */
+  background-color: #d32f2f;
+  color: #fff;
+}
+
+.sidebar-logo {
+  display: flex; /* Allow stacking icons vertically */
+  flex-direction: column; /* Stack icons vertically */
+  justify-content: space-between; /*Distribute icons evenly*/
+  height: 5%; /*Set icons container height to full sidebar */
+  background-color: #d32f2f;
+  color: #fff;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #d32f2f;
+    color: #fff;
+  }
+}
