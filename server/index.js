@@ -886,21 +886,22 @@ app.post('/saveTag', async (req, res) => {
 });
 
 //-----------------scanning panel's endpoint---------------------------------
-
 // Insert Data into AssociateResources Table
 app.post('/associate', async (req, res) => {
-  const { mainResID, mainResName, associateRes } = req.body;
+  const { mainResID, mainResName, mainResNumber, associateRes, TagStatus = 'active', ResType = 'Item', mainResDate, mainResTagID, mainResMasterID } = req.body;
 
   // Validate input
   if (!mainResID || !mainResName || !associateRes || !Array.isArray(associateRes)) {
     return res.status(400).send('Missing required fields or associateRes is not an array');
   }
 
-  console.log(associateRes)
+  console.log(associateRes);
+
+  // Declare transaction outside the try...catch block
+  const transaction = new sql.Transaction(pool);
 
   try {
     // Start a transaction
-    const transaction = new sql.Transaction(pool);
     await transaction.begin();
 
     // Iterate over each associateRes item and insert into the AssociateResources table
@@ -916,56 +917,69 @@ app.post('/associate', async (req, res) => {
         .input('associateResBatchCode', sql.NVarChar(255), associate.associateResBatchCode)
         .input('associateResProductionDetails', sql.NVarChar(255), associate.associateResProductionDetails)
         .query(`
-           INSERT INTO dbo.AssociateResources (MainResID, MainResName, AssociateResID, AssociateResName, LocationName, MachineName, ItemCode, BatchCode, ProductionDetails, UpdateDt, Status)
-           VALUES (@mainResID, @mainResName, @associateResID, @associateResName, @associateResLocation, @associateResMachineName, @associateResItemCode, @associateResBatchCode, @associateResProductionDetails, GETDATE(), 1)
-         `);
+            INSERT INTO dbo.AssociateResources (MainResID, MainResName, AssociateResID, AssociateResName, LocationName, MachineName, ItemCode, BatchCode, ProductionDetails, UpdateDt, Status)
+            VALUES (@mainResID, @mainResName, @associateResID, @associateResName, @associateResLocation, @associateResMachineName, @associateResItemCode, @associateResBatchCode, @associateResProductionDetails, GETDATE(), 1)
+          `);
 
       // Then, move the item from "items" table to "itemsAttached" table
       await pool.request()
         .input('associateResID', sql.Int, associate.associateResID)
         .query(`
-        INSERT INTO dbo.itemsAttached ( ItemNumber, date_created, Name, SKUNumber, TagID, Photo, Shift, ParentID, ItemMasterID, ResType, LinksID, DateAndTimeAttached) -- Include all columns that match between the two tables
-        SELECT ItemNumber, date_created, Name, SKUNumber, TagID, Photo, Shift, ParentID, ItemMasterID, ResType, LinksID, GETDATE() AS DateAndTimeAttached FROM dbo.items
-        WHERE ItemId = @associateResID;
+          INSERT INTO dbo.itemsAttached ( ItemNumber, date_created, Name, SKUNumber, TagID, Photo, Shift, ParentID, ItemMasterID, ResType, LinksID, DateAndTimeAttached, Location, MachineName, ItemCode, BatchCode, ProductionDetails) -- Include all columns that match between the two tables
+          SELECT ItemNumber, date_created, Name, SKUNumber, TagID, Photo, Shift, ParentID, ItemMasterID, ResType, LinksID, GETDATE() AS DateAndTimeAttached, Location, MachineName, ItemCode, BatchCode, ProductionDetails FROM dbo.items
+          WHERE ItemId = @associateResID;
 
-        DELETE FROM dbo.items
-        WHERE ItemId = @associateResID;
-      `);
+          DELETE FROM dbo.items
+          WHERE ItemId = @associateResID;
+        `);
 
       // Insert into packItemsAttached table
       await pool.request()
-        .input('mainResID', sql.Int, mainResID)
+        .input('mainResMasterID', sql.Int, mainResMasterID)
+        .input('mainResTagID', sql.Int, mainResTagID)
         .input('mainResName', sql.NVarChar(255), mainResName)
+        .input('mainResNumber', sql.NVarChar(255), mainResNumber)
+        .input('TagStatus', sql.NVarChar(255), TagStatus)
+        .input('ResType', sql.NVarChar(50), ResType)
+        .input('date', sql.Date, mainResDate)
         .query(`
-        INSERT INTO dbo.packItemsAttached (PItemID, PItemName, UpdateDt, Status)
-        VALUES (@mainResID, @mainResName, GETDATE(), 1);
-      `);
+          INSERT INTO dbo.packItemsAttached (PItemMasterID, PItemNumber, PItemName, PItemDate, PItemStatus, PItemTagID, ResType)
+          VALUES (@mainResMasterID, @mainResNumber, @mainResName, @date, 1, @mainResTagID, @ResType);
+        `);
+      // Delete from packItems table (assuming you have an identifier for the record to delete)
+      await transaction.request()
+        .input('mainResID', sql.Int, mainResID) // Replace with your identifier for deletion
+        .query(`
+    DELETE FROM dbo.packItems
+    WHERE PItemID = @mainResID;
+  `);
 
-      // Delete from the original table if needed
+      // Insert into tags table
       await pool.request()
-        .input('mainResID', sql.Int, mainResID)
+        .input('associateResItemCode', sql.NVarChar(255), associate.associateResItemCode)
+        .input('TagStatus', sql.NVarChar(255), TagStatus)
+        .input('ResType', sql.NVarChar(50), ResType)
         .query(`
-        DELETE FROM dbo.packItemsAttached
-        WHERE PItemID = @mainResID;
-      `);
-    }
+          INSERT INTO dbo.tags (TagID, Barcode, QRCode, NFC, RFID, ResNumber, TagActivateDate, ResType, TagStatus)
+          VALUES (@associateResItemCode, @associateResItemCode, @associateResItemCode, @associateResItemCode, @associateResItemCode, @associateResItemCode, GETDATE(), @ResType, @TagStatus);
+        `);
+    } // Correct placement of closing brace for the for loop
+
+    // Commit the transaction
+    await transaction.commit();
+    console.log('Transaction committed successfully.');
+
+    console.log('Received data:', req.body);
+    res.status(201).json({ message: 'Associations added successfully' });
+  } catch (error) {
+    // Rollback the transaction in case of an error
+    await transaction.rollback();
+    console.error('Error in transaction, rolling back.', error);
+    console.error('Error adding associations to the database:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-
-     // Commit the transaction
-     await transaction.commit();
-  console.log('Transaction committed successfully.');
-
-  console.log('Received data:', req.body);
-  res.status(201).json({ message: 'Associations added successfully' });
-} catch (error) {
-  // Rollback the transaction in case of an error
-  await transaction.rollback();
-  console.error('Error in transaction, rolling back.', error);
-  console.error('Error adding associations to the database:', error);
-  res.status(500).json({ error: 'Internal server error' });
-}
 });
+
 
 //---------------------------end of scanning panel endpoint-------------------------- 
 
