@@ -27,9 +27,15 @@ const Sidebar = () => {
                     </IconButton>
                 </Tooltip>
                 <Tooltip title="Production">
-                    <IconButton sx={{display: "flex", flexDirection: "column"}} onClick={() => handleNavigation('/resources/items')}>
+                    <IconButton sx={{display: "flex", flexDirection: "column"}} onClick={() => handleNavigation('/resources/machines')}>
                         <InventoryIcon sx={{ color: 'white' }} />
                         <Typography variant='p' sx={{fontSize: "10px", color: "#fff"}}>Production</Typography>
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Items">
+                    <IconButton sx={{display: "flex", flexDirection: "column"}} onClick={() => handleNavigation('/resources/items')}>
+                        <InventoryIcon sx={{ color: 'white' }} />
+                        <Typography variant='p' sx={{fontSize: "10px", color: "#fff"}}>Items</Typography>
                     </IconButton>
                 </Tooltip>
                 <Tooltip title="Packing">
