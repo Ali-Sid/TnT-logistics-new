@@ -3,6 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import Home from './production-components/Home'
+import OldComponent from './oldComponents/components/Home'
 import DisplayData from './production-components/DisplayData'
 import TestPassingData from './production-components/TestPassingData'
 import ParentComponent from './production-components/TestComponents/ParentComponent'
@@ -28,7 +29,8 @@ function App() {
             <Routes>
               <Route path='/' element={<Dashboard />} />
               <Route path='/resources/packing' element={<Packing />} />
-              <Route path='/resources/items' element={<Home />} />
+              <Route path='/resources/machines' element={<Home />} />
+              <Route path='/resources/items' element={<OldComponent />} />
               {/* <Route path='/associate' element={<TestThird />} /> */}
               <Route path='/associate' element={<TestBarcodeFetch />} />
             </Routes>
@@ -42,11 +44,12 @@ function App() {
             <div style={{ width: "5%", height: "100%", borderRadius: "5px" }}>
               <Sidebar />
             </div>
-            <div style={{ width: "95%", height: "100%", paddingTop: "2rem" }}>
+            <div style={{ width: "95%", height: "100%", paddingTop: "2rem", overflowY: "auto" }}>
               <Routes>
                 <Route path='/' element={<Dashboard />} />
                 <Route path='/resources/packing' element={<Packing />} />
-                <Route path='/resources/items' element={<Home />} />
+                <Route path='/resources/machines' element={<Home />} />
+                <Route path='/resources/items' element={<OldComponent />} />
                 {/* <Route path='/associate' element={<TestThird />} /> */}
                 <Route path='/associate' element={<TestBarcodeFetch />} />
               </Routes>
