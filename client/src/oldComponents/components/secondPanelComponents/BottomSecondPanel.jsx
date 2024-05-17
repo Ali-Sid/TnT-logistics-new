@@ -36,7 +36,7 @@ const BottomSecondPanel = ({ items, onItemClick, tags }) => {
                   secondary={
                     <>
                       {/* No need for commented-out Typography component */}
-                      {barcode}
+                      {item.TagID || 'No Tags Attached'}
                       {/* Display item.ItemNumber directly */}
                     </>
                   }

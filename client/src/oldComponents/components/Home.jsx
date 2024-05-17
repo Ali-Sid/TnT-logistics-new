@@ -3,10 +3,11 @@ import { useMediaQuery } from '@mui/material';
 import FirstPanel from './firstPanelComponents/FirstPanel';
 import SecondPanel from './secondPanelComponents/SecondPanel';
 import ThirdPanel from './thirdPanelComponents/ThirdPanel';
-import { PanelContext, PanelProvider } from '../context/PanelContext';
+// import { PanelContext, PanelProvider } from '../../context/PanelContext';
 import axios from 'axios';
 import TestPassingData from './TestPassingData';
 import TestThird from './TestThird';
+import { PanelProvider } from '../../context/PanelContext';
 
 function Home() {
     const isMobile = useMediaQuery('(max-width:600px)'); // Adjust breakpoint as needed
@@ -26,13 +27,13 @@ function Home() {
     // Function to fetch items
     const fetchItems = async () => {
         try {
-            // const response = await axios.get('http://localhost:3000/items-master');
-            const response = await axios.get('http://localhost:3000/machines');
+            const response = await axios.get('http://localhost:3000/items-master');
+            // const response = await axios.get('http://localhost:3000/machines');
             // const groupedItems = groupItems(response.data);
             // setGroup(groupedItems);
 
-            // setItems(response.data);
-            setMachines(response.data)
+            setItems(response.data);
+            // setMachines(response.data)
             // console.log(response.data)
         } catch (error) {
             console.error('Error fetching items:', error);

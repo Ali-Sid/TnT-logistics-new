@@ -25,7 +25,7 @@ function TopFirstPanel({ handleOpen }) {
                     <BookmarksIcon/>
                 </Box>
                 <Typography align='left' pl={1} variant="h6" color='#5c5c5c' noWrap>
-                    Machines
+                    Items
                 </Typography>
             </Box>
             {/* <Typography align='left' pl={2} variant="h5" color='#5c5c5c' noWrap>

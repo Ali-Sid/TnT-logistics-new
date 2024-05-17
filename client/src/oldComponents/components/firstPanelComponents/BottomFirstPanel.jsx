@@ -36,13 +36,13 @@ function BottomFirstPanel({ group, itemsMaster, handleItemClick, searchQuery, fi
                                     color: 'white',
                                 },
                             },
-                        }} key={item.MachineID}>
-                            <ListItemText primary={item.Name} secondary={
+                        }} key={item.ID}>
+                            <ListItemText primary={item.ItemDesc} secondary={
                                 <>
                                     <Typography sx={{
                                         display: 'inline'
                                     }} component='span' variant='body2' color='#a8a7a7'>
-                                        {item.SKUNumber}
+                                        {item.SKU}
                                     </Typography>
                                 </>
                             } />

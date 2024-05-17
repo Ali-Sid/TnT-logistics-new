@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { PanelContext } from '../../context/PanelContext';
+import { PanelContext } from '../../../context/PanelContext';
 import axios from 'axios';
 import { Box, Button, DialogContent, Divider, Grid, List, ListItem, ListItemText, TextField, ThemeProvider, Typography, createTheme, useMediaQuery } from '@mui/material';
 import DisplayData from '../DisplayData';

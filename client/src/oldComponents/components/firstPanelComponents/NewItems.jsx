@@ -1,10 +1,10 @@
 import { Box, Button, TextField, ThemeProvider, createTheme, useMediaQuery } from '@mui/material'
 import React, { useContext, useState } from 'react'
-import { PanelContext } from '../../context/PanelContext';
+// import { PanelContext } from '../../context/PanelContext';
 import axios from 'axios';
 import SaveIcon from '@mui/icons-material/Save';
 import DisabledByDefault from '@mui/icons-material/DisabledByDefault';
-import BoxImage from '../../assets/box_685388.png';
+import BoxImage from '/src/assets/box_685388.png';
 
 function NewItems({ onItemAdded, onCloseDialog }) {
     // const { secondPanelContent } = useContext(PanelContext);

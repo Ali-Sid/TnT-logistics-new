@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { PanelContext } from '../../context/PanelContext';
+import { PanelContext } from '../../../context/PanelContext';
 import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, Grid, IconButton, List, ListItem, ListItemText, TextField, ThemeProvider, Typography, createTheme, useMediaQuery } from '@mui/material';
 import axios from 'axios';
 import TableCatalogue from './TableCatalogue';

@@ -1,11 +1,12 @@
 import { Box, Input, Button, TextField, ThemeProvider, Typography, createTheme, useMediaQuery, IconButton, MenuItem, Menu } from '@mui/material'
 import React, { useContext, useEffect, useState } from 'react'
-import { PanelContext } from '../../context/PanelContext';
+// import { PanelContext } from '../../context/PanelContext';
 import axios from 'axios';
 import SaveIcon from '@mui/icons-material/Save';
 import DisabledByDefault from '@mui/icons-material/DisabledByDefault';
 // import { FaCalendarAlt } from "react-icons/fa";
-import BoxImage from '../../assets/box_685388.png';
+import BoxImage from '/src/assets/box_685388.png';
+
 
 
 function NewItemCatalog({ selectedItem, onItemAdded, onCloseDialog }) {
@@ -64,7 +65,7 @@ function NewItemCatalog({ selectedItem, onItemAdded, onCloseDialog }) {
         for (let i = 0; i < numberOfEntries; i++) {
             try {
                 console.log(`Iteration ${i + 1} of ${numberOfEntries}`);
-                const uniqueNumber = `${itemNumber}${i + 1}`;
+                const uniqueNumber = `${itemNumber} + ${i + 1}`;
 
                 console.log(`Sending data:`, { itemName, itemID, skuNumber, currentDate: selectedDate, itemNumber: uniqueNumber, itemSelectedID, shift });
 
