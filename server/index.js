@@ -277,7 +277,7 @@ app.get('/getPackingItems', async (req, res) => {
 // Route to insert data into dbo.Packing
 
 app.post('/addPackingItem', async (req, res) => {
-  const { currentDate, itemNumber, itemSelectedID } = req.body;
+  const { currentDate, itemNumber, itemSelectedID, itemSelectedName, Status = 1, Direction = 'IN' } = req.body;
 
   // Validate input
   if (!currentDate || !itemNumber || !itemSelectedID) {
@@ -286,16 +286,35 @@ app.post('/addPackingItem', async (req, res) => {
 
   try {
     // Insert data into the Packing table
-    await pool.request()
+    let result = await pool.request()
+      .input('itemName', sql.NVarChar(255), itemSelectedName)
       .input('itemNumber', sql.NVarChar(50), itemNumber)
       .input('itemMasterID', sql.Int, itemSelectedID) // Using itemSelectedID directly
       .input('currentDate', sql.NVarChar(50), currentDate)
       .query(`
-         INSERT INTO dbo.PackItems (PItemNumber, PItemMasterID, PItemDate)
-         VALUES (@itemNumber, @itemMasterID, CONVERT(DATE, @currentDate))
+         INSERT INTO dbo.PackItems (PItemNumber, PItemMasterID, PItemDate, PItemName)
+         OUTPUT INSERTED.PItemID
+         VALUES (@itemNumber, @itemMasterID, CONVERT(DATE, @currentDate), @itemName)
        `);
 
-    res.status(201).json({ message: 'Product added successfully' });
+    // Retrieve the generated packItemID
+    const PItemID = result.recordset[0].PItemID;
+
+    // Assuming the Movements table has similar structure, adjust column names as needed
+    await pool.request()
+      .input('movementPItemID', sql.Int, PItemID)
+      .input('movementPItemMasterID', sql.Int, itemSelectedID)
+      .input('movementPItemName', sql.NVarChar(255), itemSelectedName)
+      .input('movementPItemNumber', sql.NVarChar(50), itemNumber)
+      .input('movementCurrentDate', sql.NVarChar(50), currentDate)
+      .input('movementDirection', sql.NVarChar(50), Direction)
+      .input('movementStatus', sql.Int, Status)
+      .query(`
+        INSERT INTO dbo.Movement ( AssetId, AssetNumber, Date, assetname, Direction, Status)
+        VALUES (@movementPItemID, @movementPItemNumber, CONVERT(DATE, @movementCurrentDate), @movementPItemName, @movementDirection, @movementStatus)
+      `);
+
+    res.status(201).json({ message: 'Product added successfully in both tables' });
   } catch (error) {
     console.error('Error adding item to the database:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -398,22 +417,24 @@ app.get('/packing-master', async (req, res) => {
 // });
 
 app.post('/savePackTag', async (req, res) => {
-  const { BarCode, QRCode, NFC, RFID, TagStatus = 'active', ItemNumber, ResType = 'Packing' } = req.body;
+  const { BarCode, QRCode, NFC, RFID, TagStatus = 'active', ItemNumber, ResType = 'Packing', EPC } = req.body;
 
   try {
     // Step 1: Insert the tag into the Tags table and get the generated TagID
     const result = await pool.request()
       .input('BarCode', sql.NVarChar(255), BarCode)
+      .input('TagID', sql.NVarChar(255), BarCode)
       .input('QRCode', sql.NVarChar(255), QRCode)
       .input('NFC', sql.NVarChar(255), NFC)
       .input('RFID', sql.NVarChar(255), RFID)
       .input('TagStatus', sql.NVarChar(255), TagStatus)
       .input('ResType', sql.NVarChar(50), ResType)
       .input('ItemNumber', sql.Int(50), ItemNumber)
+      .input('EPC', sql.NVarChar(255), EPC)
       .query(`
-          INSERT INTO dbo.Tags (BarCode, QRCode, NFC, RFID, TagStatus, ResType, ResNumber)
+          INSERT INTO dbo.Tags ( TagID, BarCode, QRCode, NFC, RFID, TagStatus, ResType, ResNumber, TagActivateDate, EPC)
           OUTPUT INSERTED.TagID
-          VALUES (@BarCode, @QRCode, @NFC, @RFID, @TagStatus, @ResType, @ItemNumber)
+          VALUES (@TagID, @BarCode, @QRCode, @NFC, @RFID, @TagStatus, @ResType, @ItemNumber, GetDate(), EPC)
         `);
 
     console.log('Insert result:', result);
@@ -447,21 +468,6 @@ app.post('/savePackTag', async (req, res) => {
     res.status(201).json({ message: 'Tag inserted and PackItems updated successfully' });
   } catch (error) {
     console.error('Error adding tag or updating PackItems:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Endpoint to fetch machines table
-// Endpoint for fetching the Packing Master table
-app.get('/machines', async (req, res) => {
-  try {
-    // Query to fetch all rows from the tags table
-    const result = await pool.query('SELECT * FROM Machines');
-    // Send the fetched data as a JSON response
-    res.json(result.recordset);
-  } catch (error) {
-    console.error('Error fetching machines:', error);
-    // If there's an error, send a 500 Internal Server Error response
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -660,7 +666,7 @@ app.post('/search', async (req, res) => {
 
     //  `;
     const query = `
-     SELECT PItemID, PItemName, PItemTagID, PItemNumber, ResType FROM packItems WHERE PItemTagID = ${searchTerm}
+    SELECT PItemID, PItemName, PItemTagID, PItemNumber, ResType FROM packItems WHERE PItemNumber = ${searchTerm}
      `;
 
     const result = await pool.request().query(query);
@@ -823,26 +829,43 @@ app.post('/search2', async (req, res) => {
 //   }
 //  });
 
+// Endpoint to fetch data from dtags table
+app.get('/fetch-dtags', async (req, res) => {
+  try {
+    // Query to fetch all rows from the tags table
+    const result = await pool.query('SELECT * FROM DTags');
+    // Send the fetched data as a JSON response
+    res.json(result.recordset);
+  } catch (error) {
+    console.error('Error fetching tags:', error);
+    // If there's an error, send a 500 Internal Server Error response
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.post('/saveTag', async (req, res) => {
   const { BarCode, QRCode, NFC, RFID, TagStatus = 'active', ItemNumber, ResType = 'Item' } = req.body;
 
   try {
     // Step 1: Insert the tag into the Tags table and get the generated TagID
     const result = await pool.request()
+      .input('TagID', sql.Int, BarCode)
       .input('BarCode', sql.NVarChar(255), BarCode)
       .input('QRCode', sql.NVarChar(255), QRCode)
       .input('NFC', sql.NVarChar(255), NFC)
       .input('RFID', sql.NVarChar(255), RFID)
       .input('TagStatus', sql.NVarChar(255), TagStatus)
       .input('ResType', sql.NVarChar(50), ResType)
-      .input('ItemNumber', sql.Int(50), ItemNumber)
+      .input('ItemNumber', sql.NVarChar(255), ItemNumber)
       .query(`
-         INSERT INTO dbo.Tags (BarCode, QRCode, NFC, RFID, TagStatus, ResType, ResNumber)
+         INSERT INTO dbo.Tags (TagID, BarCode, QRCode, NFC, RFID, TagStatus, ResType, ResNumber, TagActivateDate)
          OUTPUT INSERTED.TagID
-         VALUES (@BarCode, @QRCode, @NFC, @RFID, @TagStatus, @ResType, @ItemNumber)
+         VALUES (@TagID, @BarCode, @QRCode, @NFC, @RFID, @TagStatus, @ResType, @ItemNumber, GETDATE())
        `);
 
     console.log('Insert result:', result);
+    console.log("Values being inserted:", BarCode, QRCode, NFC, RFID, TagStatus, ResType, ItemNumber);
+
 
     const tagId = result.recordset[0].TagID;
     console.log('TagID:', tagId);
@@ -877,6 +900,13 @@ app.post('/saveTag', async (req, res) => {
       .input('TagID', sql.Int, tagId)
       .input('ItemNumber', sql.Int, ItemNumber)
       .query(insertItemQuery)
+
+    // Step 3: Delete the corresponding row from DTags (if BarCode matches TID)
+    await transaction.request()
+      .input('BarCode', sql.NVarChar(255), BarCode)
+      .query(`DELETE FROM dbo.DTags WHERE TID = @BarCode`);
+
+    await transaction.commit()
 
     res.status(201).json({ message: 'Tag and item added successfully' });
   } catch (error) {
@@ -963,6 +993,22 @@ app.post('/associate', async (req, res) => {
           INSERT INTO dbo.tags (TagID, Barcode, QRCode, NFC, RFID, ResNumber, TagActivateDate, ResType, TagStatus)
           VALUES (@associateResItemCode, @associateResItemCode, @associateResItemCode, @associateResItemCode, @associateResItemCode, @associateResItemCode, GETDATE(), @ResType, @TagStatus);
         `);
+
+      // Insert into packingDetails table
+      await pool.request()
+        .input('packID', sql.Int, mainResID)
+        .input('packDescription', sql.NVarChar(255), associateResProductionDetails)
+        .input('MaxCount', sql.Int, /* Logic to get MaxCount */)
+        .input('ActualCount', sql.Int, /* Logic to get ActualCount */)
+        .input('TagID', sql.Int, associateResItemCode)
+        .input('LocationName', sql.NVarChar(255), /* Logic to get LocationName */)
+        .input('DateAndTime', sql.DateTime, /* Logic to get DateAndTime */)
+        .input('PackItemName', sql.NVarChar(255), /* Logic to get PackItemName */)
+        .query(`
+   INSERT INTO packingDetails (packID, packDescription, MaxCount, ActualCount, TagID, LocationName, DateAndTime, PackItemName)
+   VALUES (@packID, @packDescription, @MaxCount, @ActualCount, @TagID, @LocationName, @DateAndTime, @PackItemName);
+ `);
+
     } // Correct placement of closing brace for the for loop
 
     // Commit the transaction
