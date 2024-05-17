@@ -22,6 +22,7 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
     const [inputValue, setInputValue] = useState('');
 
     const [tags, setTags] = useState([]);
+	const [dtags, setDTags] = useState([]);
 
     useEffect(() => {
         // Function to fetch the tags from the backend
@@ -29,8 +30,10 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
             try {
                 // Make a GET request to fetch the tags endpoint
                 const response = await axios.get('http://localhost:3000/tags');
+				const response2 = await axios.get('http://localhost:3000/fetch-dtags');
                 // Update the state with the fetched tags
                 setTags(response.data);
+				setDTags(response2.data)
             } catch (error) {
                 console.error('Error fetching tags:', error);
             }
@@ -52,17 +55,35 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
 
     const handleSaveDialog = async () => {
         try {
+			// 1. Fetch EPC value for the BarCode (assuming BarCode is the matching column)
+            const response = await axios.get(`http://localhost:3000/fetch-dtags`); // Assuming GET /dtags/:id endpoint
+            const dtagData = response.data;
+
+            if (!dtagData) {
+                console.error('DTag not found for BarCode:', inputValue);
+                return; // Handle case where DTag is not found
+            }
+
+            const epc = dtagData.ECP;
+			
             // Assuming the backend endpoint to save the data is /api/saveTag
             await axios.post('http://localhost:3000/savePackTag', {
                 BarCode: inputValue,
                 QRCode: inputValue,
                 NFC: inputValue,
                 RFID: inputValue,
-                ItemNumber: parseInt(selectedItemList.PItemNumber)
+                ItemNumber: selectedItemList.PItemNumber,
+				EPC: epc,
             });
             setOpenDialog(false);
             setInputValue(''); // Clear the input field
             // console.log('Tag Added Successfully', inputValue)
+
+
+            // Fetch the updated tags from the backend to ensure the latest data is displayed
+            const updatedTags = await axios.get('http://localhost:3000/tags');
+            setTags(updatedTags.data); // Update the tags state with the fetched tags
+
         } catch (error) {
             console.error('Error saving tag:', error);
         }
@@ -96,6 +117,11 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
         }
         setDrawerOpen(open);
     };
+	
+	const handleClickMenu = (event, value) => {
+        setAnchorEl(event.currentTarget);
+        setSelectedItem(value);
+    };
 
 
 
@@ -106,11 +132,27 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
                 <Box sx={{ marginLeft: "10px", padding: "5px 3px 5px 3px", border: "1px solid #d32f2f", backgroundColor: "#d32f2f", color: "#fff", borderRadius: "5px", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", width: "auto", height: "16px" }}>
                     <NumbersIcon />
                 </Box>
-                <Typography align='left' pl={1} variant="h5" color='#5c5c5c' noWrap>
+                {/* <Typography align='left' pl={1} variant="h5" color='#5c5c5c' noWrap>
                     {selectedItemList && tags.find(tag => tag.TagID === selectedItemList.PItemTagID)?.Barcode || (
                         <Button variant='contained' color='error' sx={{ textTransform: 'none', fontSize: "12px", height: "28px" }} onClick={handleDialogOpen}>Add Tag</Button>
                     )}
+                </Typography> */}
+                {/* <Typography align='left' pl={1} variant="h5" color='#5c5c5c' noWrap>
+                    {selectedItemList ? (
+                        <span>{selectedItemList.PItemTagID}</span>
+                    ) : (
+                        <Button variant='contained' color='error' sx={{ textTransform: 'none', fontSize: "12px", height: "28px" }} onClick={handleDialogOpen}>Add Tag</Button>
+                    )}
+                </Typography> */}
+                <Typography align='left' pl={1} variant="h5" color='#5c5c5c' noWrap>
+                    {selectedItemList ? (
+                        selectedItemList.PItemTagID  // Check directly for truthiness
+                            ? <span>{selectedItemList.PItemTagID}</span>
+                            : <Button variant='contained' color='error' sx={{ textTransform: 'none', fontSize: "12px", height: "28px" }} onClick={handleDialogOpen}>Add Tag</Button>
+                    ) : null}
                 </Typography>
+
+
             </Box>
             {/* <Box sx={{ display: "flex", justifyContent: "left", mt: 2, ml: 2 }}>
                 <Button onClick={handleOpen} variant="contained" color="error">Add New</Button>
@@ -174,8 +216,33 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
                     />
                 </DialogContent>
                 <DialogActions>
+                    <Button onClick={handleClickMenu}>Select Tags</Button>
                     <Button onClick={handleDialogClose}>Cancel</Button>
                     <Button onClick={handleSaveDialog}>Save</Button>
+		    <Menu
+                        id="basic-menu"
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleClose}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'right',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                        MenuListProps={{
+                            'aria-labelledby': 'basic-button',
+                        }}
+                    >
+                        {dtags.map((dtag) => (
+                            <MenuItem key={dtag.Id} value={dtag.TID} onClick={() => setInputValue(dtag.TID)}>
+                                {dtag.TID}
+                            </MenuItem>
+                        ))}
+                    </Menu>
+
                 </DialogActions>
             </Dialog>
             {/* ----------------------------------------------- */}

@@ -5,6 +5,7 @@ import TopSecondPanel from './TopSecondPanel';
 import BottomSecondPanel from './BottomSecondPanel';
 import NewItemCatalog from './NewItemCatalog';
 import CloseIcon from '@mui/icons-material/Close';
+import { ItemUpdateProvider, useItemUpdateContext } from './CatalogContext';
 // import { PanelContext } from '../context/PanelContext';
 
 const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onItemClick }) => {
@@ -12,6 +13,10 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
   const [getItems, setGetItems] = useState('')
   const [packingItems, setPackingItems] = useState([])
   const [tags, setTags] = useState([])
+  // const { items, updateItems } = useItemUpdateContext();
+
+  // const { updateItems } = useItemUpdateContext();
+  // const { updateItems } = useContext(CatalogContext);
 
   // useEffect(() => {
   //   // Fetch items when the component mounts or when the selected item changes
@@ -45,6 +50,11 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
   //   fetchItems();
   // }, [selectedItem]);
 
+  // Filter items based on the selected item's PItemMasterID
+  const filteredItems = selectedItem ? packingItems.filter(item => item.PItemMasterID === selectedItem.PItemMasterID) : [];
+  const totalCount = filteredItems.length;
+
+
   // Wait for both packing items and tags to be fetched
   useEffect(() => {
     const fetchData = async () => {
@@ -56,6 +66,7 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
 
         setPackingItems(packingResponse.data);
         setTags(tagsResponse.data);
+
       } catch (error) {
         console.error('Error fetching items:', error);
       }
@@ -64,10 +75,10 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
     fetchData();
   }, [selectedItem]);
 
-  // Filter items based on the selected item's PItemMasterID
-  const filteredItems = selectedItem ? packingItems.filter(item => item.PItemMasterID === selectedItem.PItemMasterID) : [];
-  const totalCount = filteredItems.length;
-
+  // Update the context with the filtered items
+  // useEffect(() => {
+  //   updateItems(filteredItems); // Update the context with the filtered items
+  // }, [filteredItems, updateItems]);
 
 
   const handleOpen = () => {
@@ -82,7 +93,8 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
     // Refetch items after an item is added
     try {
       const response = await axios.get('http://localhost:3000/getPackingItems');
-      setGetItems(response.data);
+      setPackingItems(response.data);
+      updateItems(response.data); // Update the context with the new items
 
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -90,35 +102,37 @@ const SecondPanel = ({ selectedItem, items, onItemSelected, handleItemClick, onI
   };
 
   return (
-    <div>
-      <div style={{ overflow: "hidden" }}>
-        {selectedItem && <TopSecondPanel selectedItem={selectedItem} handleOpen={handleOpen} handleClose={handleClose} totalCount={totalCount} />}
-        <BottomSecondPanel selectedItem={selectedItem} items={items} filteredItems={filteredItems} onItemClick={onItemClick} />
-        <Dialog
-          fullWidth
-          fullScreen
-          maxWidth="sm"
-          open={open} // Use the open state here
-          onClose={handleClose} // Use the handleClose function here
-        >
-          <DialogTitle>
-            <Grid container alignItems="center" justifyContent="space-between">
-              <Grid item>
-                Add New Catalogue
+    <ItemUpdateProvider>
+      <div>
+        <div style={{ overflow: "hidden" }}>
+          {selectedItem && <TopSecondPanel selectedItem={selectedItem} handleOpen={handleOpen} handleClose={handleClose} totalCount={totalCount} />}
+          <BottomSecondPanel selectedItem={selectedItem} items={items} filteredItems={filteredItems} onItemClick={onItemClick} />
+          <Dialog
+            fullWidth
+            fullScreen
+            maxWidth="sm"
+            open={open} // Use the open state here
+            onClose={handleClose} // Use the handleClose function here
+          >
+            <DialogTitle>
+              <Grid container alignItems="center" justifyContent="space-between">
+                <Grid item>
+                  Add New Catalogue
+                </Grid>
+                <Grid item>
+                  <IconButton aria-label="close" onClick={handleClose}>
+                    <CloseIcon />
+                  </IconButton>
+                </Grid>
               </Grid>
-              <Grid item>
-                <IconButton aria-label="close" onClick={handleClose}>
-                  <CloseIcon />
-                </IconButton>
-              </Grid>
-            </Grid>
-          </DialogTitle>
-          <DialogContent>
-            <NewItemCatalog selectedItem={selectedItem} onItemAdded={handleItemAdded} onCloseDialog={handleClose} />
-          </DialogContent>
-        </Dialog>
+            </DialogTitle>
+            <DialogContent>
+              <NewItemCatalog selectedItem={selectedItem} onItemAdded={handleItemAdded} onCloseDialog={handleClose} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
-    </div>
+    </ItemUpdateProvider>
 
   );
 };

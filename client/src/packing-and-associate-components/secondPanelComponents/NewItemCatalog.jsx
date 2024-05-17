@@ -1,14 +1,17 @@
 import { Box, Input, Button, TextField, ThemeProvider, Typography, createTheme, useMediaQuery, IconButton } from '@mui/material'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { PanelContext } from '../../context/PanelContext';
 import axios from 'axios';
 import SaveIcon from '@mui/icons-material/Save';
 import DisabledByDefault from '@mui/icons-material/DisabledByDefault';
 // import { FaCalendarAlt } from "react-icons/fa";
-import BoxImage from '../../assets/box_685388.png'
+// import BoxImage from 'client/src/assets/box_685388.png';
+import BoxImg from '/src/assets/box_685388.png';
+import { useItemUpdateContext } from './CatalogContext';
 
 
 function NewItemCatalog({ selectedItem, onItemAdded, onCloseDialog }) {
+    // const { updateItems } = useItemUpdateContext()
     // const { secondPanelContent } = useContext(PanelContext);
     const isMobile = useMediaQuery('(max-width:600px)');
     const [showTable, setShowTable] = useState(false);
@@ -58,9 +61,10 @@ function NewItemCatalog({ selectedItem, onItemAdded, onCloseDialog }) {
                 // const parseNumber = parseInt(uniqueNumber)
 
                 const itemSelectedID = selectedItem.PItemMasterID
+                const itemSelectedName = selectedItem.PItemName
 
 
-                const response = await axios.post('http://localhost:3000/addPackingItem', { currentDate: selectedDate, itemNumber: uniqueNumber, itemSelectedID }, {
+                const response = await axios.post('http://localhost:3000/addPackingItem', { currentDate: selectedDate, itemNumber: uniqueNumber, itemSelectedID, itemSelectedName }, {
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -76,18 +80,28 @@ function NewItemCatalog({ selectedItem, onItemAdded, onCloseDialog }) {
             }
         }
 
-        if (onItemAdded) {
-            onItemAdded();
-        }
+        
         // Fetch the latest items after adding a new item
         // fetchItems();
         // Toggle visibility to show the table
         setShowTable(true);
 
+        // // Fetch the updated list of items
+        // const updatedItemsResponse = await axios.get('http://localhost:3000/getPackingItems');
+        // const newItems = updatedItemsResponse.data;
+
+        // Update items using the context
+        // updateItems(newItems); // Assuming newItems is the updated list of items
+
+
+        if (onItemAdded) {
+            onItemAdded();
+        }
+
+
         if (onCloseDialog) {
             onCloseDialog();
         }
-        window.location.reload()
     };
 
     const handleCancel = () => {
@@ -112,7 +126,7 @@ function NewItemCatalog({ selectedItem, onItemAdded, onCloseDialog }) {
                             objectFit: "cover",
                         }}
                         alt="The house from the offer."
-                        src={BoxImage}
+                        src={BoxImg}
                     />
                 </Box>
                 <Box component="form" onSubmit={handleSubmit}
@@ -127,7 +141,7 @@ function NewItemCatalog({ selectedItem, onItemAdded, onCloseDialog }) {
                         <TextField fullWidth label="Item Name" onChange={(e) => setItemName(e.target.value)} /> */}
                         <div style={{ margin: "10px" }}>
                             <Input type='date' value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
-                            
+
                             {/* <IconButton
                                 aria-label="calendar"
                                 onClick={() => {

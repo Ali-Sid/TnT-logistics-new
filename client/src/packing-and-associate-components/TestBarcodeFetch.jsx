@@ -51,6 +51,10 @@ function TestBarcodeFetch() {
 
         const dataToSend = {
             mainResID: selectedParent.PItemID,
+            mainResMasterID: selectedParent.PItemMasterID,
+            mainResNumber: selectedParent.PItemNumber,
+            mainResDate: selectedParent.PItemDate,
+            mainResTagID: selectedParent.PItemTagID,
             mainResName: selectedParent.Name || selectedParent.PItemName,
             associateRes: searchResults2.map(item => ({
                 associateResID: item.ItemID || item.ID,

@@ -2,10 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { Divider, List, ListItemButton, ListItemText, Typography } from '@mui/material';
 import axios from 'axios';
+import { useItemUpdateContext } from './CatalogContext';
 
 const BottomSecondPanel = ({ selectedItem, items, onItemClick, filteredItems }) => {
   // const [tags, setTags] = useState([])
   // const [packingItems, setPackingItems] = useState([]);
+  const { items: contextItems } = useItemUpdateContext();
+
 
 
   const [tags, setTags] = useState([]);
@@ -29,7 +32,7 @@ const BottomSecondPanel = ({ selectedItem, items, onItemClick, filteredItems }) 
     };
 
     fetchData();
-  }, []);
+  }, [contextItems]);
 
   useEffect(() => {
     // Fetch packing items from the backend
@@ -87,7 +90,7 @@ const BottomSecondPanel = ({ selectedItem, items, onItemClick, filteredItems }) 
                 <ListItemText primary={item.PItemNumber} secondary={
                   <>
                     <Typography sx={{ display: 'inline' }} component='span' variant='body2' color='#a8a7a7'>
-                      {barcode}
+                      {item.PItemTagID || 'No Tags Attached'}
                     </Typography>
                   </>
                 } />
