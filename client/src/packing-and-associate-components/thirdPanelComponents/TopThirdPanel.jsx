@@ -22,7 +22,8 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
     const [inputValue, setInputValue] = useState('');
 
     const [tags, setTags] = useState([]);
-	const [dtags, setDTags] = useState([]);
+    const [dtags, setDTags] = useState([]);
+    const [epc, setEpc] = useState('')
 
     useEffect(() => {
         // Function to fetch the tags from the backend
@@ -30,10 +31,10 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
             try {
                 // Make a GET request to fetch the tags endpoint
                 const response = await axios.get('http://localhost:3000/tags');
-				const response2 = await axios.get('http://localhost:3000/fetch-dtags');
+                const response2 = await axios.get('http://localhost:3000/fetch-dtags');
                 // Update the state with the fetched tags
                 setTags(response.data);
-				setDTags(response2.data)
+                setDTags(response2.data)
             } catch (error) {
                 console.error('Error fetching tags:', error);
             }
@@ -55,7 +56,7 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
 
     const handleSaveDialog = async () => {
         try {
-			// 1. Fetch EPC value for the BarCode (assuming BarCode is the matching column)
+            // 1. Fetch EPC value for the BarCode (assuming BarCode is the matching column)
             const response = await axios.get(`http://localhost:3000/fetch-dtags`); // Assuming GET /dtags/:id endpoint
             const dtagData = response.data;
 
@@ -64,17 +65,19 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
                 return; // Handle case where DTag is not found
             }
 
-            const epc = dtagData.ECP;
-			
+
+
             // Assuming the backend endpoint to save the data is /api/saveTag
-            await axios.post('http://localhost:3000/savePackTag', {
+            const result = await axios.post('http://localhost:3000/savePackTag', {
                 BarCode: inputValue,
                 QRCode: inputValue,
                 NFC: inputValue,
                 RFID: inputValue,
                 ItemNumber: selectedItemList.PItemNumber,
-				EPC: epc,
+                EPC: epc,
             });
+            console.log(result.data)
+            console.log(epc)
             setOpenDialog(false);
             setInputValue(''); // Clear the input field
             // console.log('Tag Added Successfully', inputValue)
@@ -117,8 +120,8 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
         }
         setDrawerOpen(open);
     };
-	
-	const handleClickMenu = (event, value) => {
+
+    const handleClickMenu = (event, value) => {
         setAnchorEl(event.currentTarget);
         setSelectedItem(value);
     };
@@ -219,7 +222,7 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
                     <Button onClick={handleClickMenu}>Select Tags</Button>
                     <Button onClick={handleDialogClose}>Cancel</Button>
                     <Button onClick={handleSaveDialog}>Save</Button>
-		    <Menu
+                    <Menu
                         id="basic-menu"
                         anchorEl={anchorEl}
                         open={open}
@@ -237,7 +240,7 @@ function TopThirdPanel({ selectedItemList, group, items, onItemClick }) {
                         }}
                     >
                         {dtags.map((dtag) => (
-                            <MenuItem key={dtag.Id} value={dtag.TID} onClick={() => setInputValue(dtag.TID)}>
+                            <MenuItem key={dtag.Id} value={dtag.TID} onClick={() => { setInputValue(dtag.TID); setEpc(dtag.ECP) }}>
                                 {dtag.TID}
                             </MenuItem>
                         ))}

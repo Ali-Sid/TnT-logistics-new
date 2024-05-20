@@ -64,6 +64,7 @@ function TestBarcodeFetch() {
                 associateResItemCode: item.ItemCode,
                 associateResBatchCode: item.BatchCode,
                 associateResProductionDetails: item.ProductionDetails,
+                associateResSKU: item.SKU,
                 associateResDate: new Date().toISOString()
             }))
         };
