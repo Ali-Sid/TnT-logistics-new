@@ -95,9 +95,9 @@ button:focus-visible {
 .sidebar-icons {
   display: flex; /* Allow stacking icons vertically */
   flex-direction: column; /* Stack icons vertically */
-  justify-content: space-between; /*Distribute icons evenly*/
+  justify-content: space-around; /*Distribute icons evenly*/
   /* padding: 1rem; Optional: Add padding */
-  height: 60%; /* Set icons container height to full sidebar */
+  height: 90%; /* Set icons container height to full sidebar */
   background-color: #d32f2f;
   color: #fff;
 }
@@ -117,7 +117,7 @@ button:focus-visible {
   flex-direction: column; /* Stack icons vertically */
   justify-content: space-between; /*Distribute icons evenly*/
   height: 5%; /*Set icons container height to full sidebar */
-  background-color: #d32f2f;
+  /* background-color: #ffffff; */
   color: #fff;
 }
 
