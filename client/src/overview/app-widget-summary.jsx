@@ -18,6 +18,7 @@ export default function AppWidgetSummary({ title, total, icon, color = 'primary'
       sx={{
         px: 3,
         py: 5,
+        bgcolor: "#fafafa",
         borderRadius: 2,
         ...sx,
       }}
@@ -25,13 +26,13 @@ export default function AppWidgetSummary({ title, total, icon, color = 'primary'
     >
       {icon && <Box sx={{ width: 64, height: 64 }}>{icon}</Box>}
 
-      <Stack spacing={0.5}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}> {/* Centered box */}
         <Typography variant="h4">{fShortenNumber(total)}</Typography>
 
         <Typography variant="subtitle2" sx={{ color: 'text.disabled' }}>
           {title}
         </Typography>
-      </Stack>
+      </Box>
     </Card>
   );
 }
