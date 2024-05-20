@@ -15,47 +15,29 @@ import { useMediaQuery } from '@mui/material'
 import Sidebar from './dashboard-components/Sidebar'
 import BottomNav from './dashboard-components/BottomNav'
 import Dashboard from './Dashboard'
+import LoginView from './login/login-view'
+import { InitialNavigation } from './InitialNavigation'
+import { LayoutWrapper } from './LayoutWrapper'
+import TagsView from './TagsView/TagsView'
 
 function App() {
-  const [count, setCount] = useState(0);
-  const isMobile = useMediaQuery('(max-width:600px)')
 
   return (
     <>
       <Router>
+        {/* <InitialNavigation /> */}
 
-        {isMobile && (
-          <div style={{ width: "100%", height: "100%" }}>
-            <Routes>
-              <Route path='/' element={<Dashboard />} />
-              <Route path='/resources/packing' element={<Packing />} />
-              <Route path='/resources/machines' element={<Home />} />
-              <Route path='/resources/items' element={<OldComponent />} />
-              {/* <Route path='/associate' element={<TestThird />} /> */}
-              <Route path='/associate' element={<TestBarcodeFetch />} />
-            </Routes>
-            <BottomNav />
-          </div>
-
-        )}
-
-        {!isMobile && (
-          <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "row" }}>
-            <div style={{ width: "5%", height: "100%", borderRadius: "5px" }}>
-              <Sidebar />
-            </div>
-            <div style={{ width: "95%", height: "100%", paddingTop: "2rem", overflowY: "auto" }}>
-              <Routes>
-                <Route path='/' element={<Dashboard />} />
-                <Route path='/resources/packing' element={<Packing />} />
-                <Route path='/resources/machines' element={<Home />} />
-                <Route path='/resources/items' element={<OldComponent />} />
-                {/* <Route path='/associate' element={<TestThird />} /> */}
-                <Route path='/associate' element={<TestBarcodeFetch />} />
-              </Routes>
-            </div>
-          </div>
-        )}
+        <LayoutWrapper>
+          <Routes>
+            <Route path='/' element={<Dashboard />} />
+            <Route path='/resources/packing' element={<Packing />} />
+            <Route path='/resources/machines' element={<Home />} />
+            <Route path='/resources/items' element={<OldComponent />} />
+            <Route path='/associate' element={<TestBarcodeFetch />} />
+            <Route path='/tags' element={<TagsView />} />
+            <Route path='/login' element={<LoginView />} />
+          </Routes>
+        </LayoutWrapper>
 
       </Router >
       {/* <Home /> */}
