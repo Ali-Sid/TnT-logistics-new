@@ -1,10 +1,10 @@
 const sql = require('mssql');
 
 const config = {
-    user: 'sa',
-    password: 'Kings.123',
-    server: '127.0.0.1', // You can use 'localhost\\instance' to connect to a named instance
-    database: 'tntl',
+    user: '',
+    password: '',
+    server: '', // You can use 'localhost\\instance' to connect to a named instance
+    database: '',
     options: {
         encrypt: true, // Use this if you're on Windows Azure
     },
