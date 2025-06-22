@@ -12,10 +12,10 @@ const port = 3000; // Set the port number
 // app.use(bodyParser.json());
 
 const config = {
-  user: 'sa',
-  password: 'Kings.123',
-  server: '127.0.0.1',
-  database: 'TnTLogicDB',
+  user: '',
+  password: '',
+  server: '',
+  database: '',
   options: {
     encrypt: false // Use this if you're on Windows Azure
   }
